@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "redux": "^3.6.0"
+  },
+  "engines": {
+    "node": ">=6"
+  }
+}
