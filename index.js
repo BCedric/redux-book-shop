@@ -1,14 +1,13 @@
 const { createStore } = require('redux')
+const { Set } = require('immutable')
 
 const store = createStore((state, action) => {
   if (state === undefined) {
-    state = { books: [] }
+    state = { books: new Set() }
   }
 
   if (action.type === 'ADD_BOOK') {
-    return Object.assign({}, {
-      books: [ ...state.books, action.title ]
-    })
+    return state = { books: state.books.add(action.title)}
   }
 
   if (action.type === 'REMOVE_BOOK') {
@@ -24,4 +23,5 @@ store.subscribe(() => {
 
 
 store.dispatch({ type: 'ADD_BOOK', title: 'Война и мир, Voïna i mir' })
-store.dispatch({ type: 'REMOVE_BOOK', title: 'Война и мир, Voïna i mir' })
+store.dispatch({ type: 'ADD_BOOK', title: 'Война и мир, Voïna i mir' })
+//store.dispatch({ type: 'REMOVE_BOOK', title: 'Война и мир, Voïna i mir' })
