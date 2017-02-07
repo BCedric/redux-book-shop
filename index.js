@@ -11,7 +11,7 @@ const store = createStore((state, action) => {
   }
 
   if (action.type === 'REMOVE_BOOK') {
-    throw new Error('not implemented')
+    return { books: state.books.delete(action.title)}
   }
 
   return state
@@ -24,4 +24,4 @@ store.subscribe(() => {
 
 store.dispatch({ type: 'ADD_BOOK', title: 'Война и мир, Voïna i mir' })
 store.dispatch({ type: 'ADD_BOOK', title: 'Война и мир, Voïna i mir' })
-//store.dispatch({ type: 'REMOVE_BOOK', title: 'Война и мир, Voïna i mir' })
+store.dispatch({ type: 'REMOVE_BOOK', title: 'Война и мир, Voïna i mir' })
