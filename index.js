@@ -7,7 +7,7 @@ const store = createStore((state, action) => {
   }
 
   if (action.type === 'ADD_BOOK') {
-    return state = { books: state.books.add(action.title)}
+    return { books: state.books.add(action.title)}
   }
 
   if (action.type === 'REMOVE_BOOK') {
