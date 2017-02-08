@@ -32,17 +32,45 @@ const assertStore = obj => {
   assert.deepStrictEqual(obj, mapValues(store.getState(), value => value.toJS()))
 }
 
-store.dispatch({ type: 'ADD_BOOK', title: 'Война и мир, Voïna i mir' })
+function addBook (title) {
+  return {
+    type: 'ADD_BOOK',
+    title: title
+  }
+}
+
+function removeBook (title) {
+  return {
+    type: 'REMOVE_BOOK',
+    title: title
+  }
+}
+
+function addCustomer (customer) {
+  return {
+    type: 'ADD_CUSTOMER',
+    customer: customer
+  }
+}
+
+function removeCustomer (customer) {
+  return {
+    type: 'REMOVE_CUSTOMER',
+    customer: customer
+  }
+}
+
+store.dispatch(addBook('Война и мир, Voïna i mir'))
 assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
 
 store.dispatch({ type: 'ADD_BOOK', title: 'Война и мир, Voïna i mir' })
 assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
 
-store.dispatch({ type: 'REMOVE_BOOK', title: 'Война и мир, Voïna i mir' })
+store.dispatch(removeBook('Война и мир, Voïna i mir'))
 assertStore({ books: [], customers: [] })
 
-store.dispatch({ type: 'ADD_CUSTOMER', customer: 'Tintin' })
+store.dispatch(addCustomer('Tintin'))
 assertStore({ books: [], customers: ['Tintin'] })
 
-store.dispatch({ type: 'REMOVE_CUSTOMER', customer: 'Tintin' })
+store.dispatch(removeCustomer('Tintin'))
 assertStore({ books: [], customers: [] })
