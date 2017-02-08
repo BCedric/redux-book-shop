@@ -1,14 +1,9 @@
 const assert = require('assert')
-const { createStore, combineReducers } = require('redux')
+const { combineReducers, createStore } = require('redux')
 const { mapValues } = require('lodash')
 const { Set } = require('immutable')
 
-const initialState = Set()
-
-const bookReducer = (state, action) => {
-  if (state === undefined) {
-    state = initialState
-  }
+const bookReducer = (state = Set(), action) => {
   if (action.type === 'ADD_BOOK') {
     return state.add(action.title)
   }
@@ -18,10 +13,7 @@ const bookReducer = (state, action) => {
   return state
 }
 
-const customerReducer = (state, action) => {
-  if (state === undefined) {
-    state = initialState
-  }
+const customerReducer = (state = Set(), action) => {
   if (action.type === 'ADD_CUSTOMER') {
     return state.add(action.customer)
   }
