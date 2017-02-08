@@ -1,11 +1,13 @@
 const assert = require('assert')
 const { createStore, combineReducers } = require('redux')
-const { Set } = require('immutable')
 const { mapValues } = require('lodash')
+const { Set } = require('immutable')
+
+const initialState = Set()
 
 const bookReducer = (state, action) => {
   if (state === undefined) {
-    state = Set()
+    state = initialState
   }
   if (action.type === 'ADD_BOOK') {
     return state.add(action.title)
@@ -18,7 +20,7 @@ const bookReducer = (state, action) => {
 
 const customerReducer = (state, action) => {
   if (state === undefined) {
-    state = Set()
+    state = initialState
   }
   if (action.type === 'ADD_CUSTOMER') {
     return state.add(action.customer)
@@ -29,12 +31,10 @@ const customerReducer = (state, action) => {
   return state
 }
 
-const rootReducer = combineReducers({
+const store = createStore(combineReducers({
   books: bookReducer,
   customers: customerReducer
-})
-
-const store = createStore(rootReducer)
+}))
 
 const assertStore = obj => {
   assert.deepStrictEqual(obj, mapValues(store.getState(), value => value.toJS()))
