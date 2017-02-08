@@ -60,22 +60,17 @@ function removeCustomer (customer) {
   }
 }
 
-const addBookAction = (title) => store.dispatch(addBook(title))
-const removeBookAction = (title) => store.dispatch(removeBook(title))
-const addCustomerAction = (customer) => store.dispatch(addCustomer(customer))
-const removeCustomerAction = (customer) => store.dispatch(removeCustomer(customer))
-
-addBookAction('Война и мир, Voïna i mir')
+store.dispatch(addBook('Война и мир, Voïna i mir'))
 assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
 
-addBookAction('Война и мир, Voïna i mir')
+store.dispatch(addBook('Война и мир, Voïna i mir'))
 assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
 
-removeBookAction('Война и мир, Voïna i mir')
+store.dispatch(removeBook('Война и мир, Voïna i mir'))
 assertStore({ books: [], customers: [] })
 
-addCustomerAction('Tintin')
+store.dispatch(addCustomer('Tintin'))
 assertStore({ books: [], customers: ['Tintin'] })
 
-removeCustomerAction('Tintin')
+store.dispatch(removeCustomer('Tintin'))
 assertStore({ books: [], customers: [] })
