@@ -35,42 +35,47 @@ const assertStore = obj => {
 function addBook (title) {
   return {
     type: 'ADD_BOOK',
-    title: title
+    title
   }
 }
 
 function removeBook (title) {
   return {
     type: 'REMOVE_BOOK',
-    title: title
+    title
   }
 }
 
 function addCustomer (customer) {
   return {
     type: 'ADD_CUSTOMER',
-    customer: customer
+    customer
   }
 }
 
 function removeCustomer (customer) {
   return {
     type: 'REMOVE_CUSTOMER',
-    customer: customer
+    customer
   }
 }
 
-store.dispatch(addBook('Война и мир, Voïna i mir'))
+const addBookAction = (title) => store.dispatch(addBook(title))
+const removeBookAction = (title) => store.dispatch(removeBook(title))
+const addCustomerAction = (customer) => store.dispatch(addCustomer(customer))
+const removeCustomerAction = (customer) => store.dispatch(removeCustomer(customer))
+
+addBookAction('Война и мир, Voïna i mir')
 assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
 
-store.dispatch({ type: 'ADD_BOOK', title: 'Война и мир, Voïna i mir' })
+addBookAction('Война и мир, Voïna i mir')
 assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
 
-store.dispatch(removeBook('Война и мир, Voïna i mir'))
+removeBookAction('Война и мир, Voïna i mir')
 assertStore({ books: [], customers: [] })
 
-store.dispatch(addCustomer('Tintin'))
+addCustomerAction('Tintin')
 assertStore({ books: [], customers: ['Tintin'] })
 
-store.dispatch(removeCustomer('Tintin'))
+removeCustomerAction('Tintin')
 assertStore({ books: [], customers: [] })
