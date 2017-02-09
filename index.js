@@ -15,7 +15,7 @@ function createReducer (initialState, handlers) {
 
 const bookReducer = createReducer(Map(), {
   ADD_BOOK (state, action) {
-    return state.set(action.isbn, Map([['title', action.title]]))
+    return state.set(action.isbn, Map({'title': action.title}))
   },
   REMOVE_BOOK (state, action) {
     return state.delete(action.isbn)
