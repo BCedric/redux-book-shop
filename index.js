@@ -1,27 +1,34 @@
 const assert = require('assert')
 const { combineReducers, createStore } = require('redux')
+const { Map, Set } = require('immutable')
 const { mapValues } = require('lodash')
-const { Set } = require('immutable')
 
-const bookReducer = (state = Set(), action) => {
-  if (action.type === 'ADD_BOOK') {
-    return state.add(action.title)
+function createReducer (initialState, handlers) {
+  return function reducer (state = initialState, action) {
+    if (Object.prototype.hasOwnProperty.call(handlers, action.type)) {
+      return handlers[action.type](state, action.payload)
+    }
+    return state
   }
-  if (action.type === 'REMOVE_BOOK') {
-    return state.delete(action.title)
-  }
-  return state
 }
 
-const customerReducer = (state = Set(), action) => {
-  if (action.type === 'ADD_CUSTOMER') {
-    return state.add(action.customer)
+const bookReducer = createReducer(Map(), {
+  ADD_BOOK (state, { isbn, title }) {
+    return state.set(isbn, Map({ title }))
+  },
+  REMOVE_BOOK (state, { isbn ) {
+    return state.delete(isbn)
   }
-  if (action.type === 'REMOVE_CUSTOMER') {
-    return state.delete(action.customer)
+})
+
+const customerReducer = createReducer(Set(), {
+  ADD_CUSTOMER (state, { customer }) {
+    return state.add(customer)
+  },
+  REMOVE_CUSTOMER (state, { customer }) {
+    return state.delete(customer)
   }
-  return state
-}
+})
 
 const store = createStore(combineReducers({
   books: bookReducer,
@@ -32,45 +39,48 @@ const assertStore = obj => {
   assert.deepStrictEqual(obj, mapValues(store.getState(), value => value.toJS()))
 }
 
-function addBook (title) {
+function addBook (isbn, title) {
   return {
     type: 'ADD_BOOK',
-    title
+    payload: {
+      isbn,
+      title
+    }
   }
 }
 
-function removeBook (title) {
+function removeBook (isbn) {
   return {
     type: 'REMOVE_BOOK',
-    title
+    payload: { isbn }
   }
 }
 
 function addCustomer (customer) {
   return {
     type: 'ADD_CUSTOMER',
-    customer
+    payload: { customer }
   }
 }
 
 function removeCustomer (customer) {
   return {
     type: 'REMOVE_CUSTOMER',
-    customer
+    payload: { customer }
   }
 }
 
-store.dispatch(addBook('Война и мир, Voïna i mir'))
-assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
+store.dispatch(addBook('978-2020476966', 'Война и мир, Voïna i mir'))
+assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: [] })
 
-store.dispatch(addBook('Война и мир, Voïna i mir'))
-assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
+store.dispatch(addBook('978-2020476966', 'Война и мир, Voïna i mir'))
+assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: [] })
 
-store.dispatch(removeBook('Война и мир, Voïna i mir'))
-assertStore({ books: [], customers: [] })
+store.dispatch(removeBook('978-2020476966'))
+assertStore({ books: {}, customers: [] })
 
 store.dispatch(addCustomer('Tintin'))
-assertStore({ books: [], customers: ['Tintin'] })
+assertStore({ books: {}, customers: [ 'Tintin' ] })
 
 store.dispatch(removeCustomer('Tintin'))
-assertStore({ books: [], customers: [] })
+assertStore({ books: {}, customers: [] })
