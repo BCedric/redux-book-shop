@@ -13,19 +13,19 @@ function createReducer (initialState, handlers) {
 }
 
 const bookReducer = createReducer(Map(), {
-  ADD_BOOK (state, { isbn, title }) {
+  [addBook().type] (state, { isbn, title }) {
     return state.set(isbn, Map({ title }))
   },
-  REMOVE_BOOK (state, { isbn ) {
+  [removeBook().type] (state, { isbn }) {
     return state.delete(isbn)
   }
 })
 
 const customerReducer = createReducer(Set(), {
-  ADD_CUSTOMER (state, { customer }) {
+  [addCustomer().type] (state, { customer }) {
     return state.add(customer)
   },
-  REMOVE_CUSTOMER (state, { customer }) {
+  [removeCustomer().type] (state, { customer }) {
     return state.delete(customer)
   }
 })
@@ -39,7 +39,7 @@ const assertStore = obj => {
   assert.deepStrictEqual(obj, mapValues(store.getState(), value => value.toJS()))
 }
 
-function addBook (isbn, title) {
+function addBook (isbn = '', title = '') {
   return {
     type: 'ADD_BOOK',
     payload: {
@@ -49,21 +49,21 @@ function addBook (isbn, title) {
   }
 }
 
-function removeBook (isbn) {
+function removeBook (isbn = '') {
   return {
     type: 'REMOVE_BOOK',
     payload: { isbn }
   }
 }
 
-function addCustomer (customer) {
+function addCustomer (customer = '') {
   return {
     type: 'ADD_CUSTOMER',
     payload: { customer }
   }
 }
 
-function removeCustomer (customer) {
+function removeCustomer (customer = '') {
   return {
     type: 'REMOVE_CUSTOMER',
     payload: { customer }
