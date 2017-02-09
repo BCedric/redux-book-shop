@@ -1,10 +1,10 @@
 const assert = require('assert')
 const { combineReducers, createStore } = require('redux')
 const { mapValues } = require('lodash')
-const { Set } = require('immutable')
+const { Set, Map } = require('immutable')
 
-function createReducer (handlers) {
-  return function reducer (state = Set(), action) {
+function createReducer (initialState, handlers) {
+  return function reducer (state = initialState, action) {
     if (handlers.hasOwnProperty(action.type)) {
       return handlers[action.type](state, action)
     } else {
@@ -13,16 +13,16 @@ function createReducer (handlers) {
   }
 }
 
-const bookReducer = createReducer({
+const bookReducer = createReducer(Map(), {
   ADD_BOOK (state, action) {
-    return state.add(action.title)
+    return state.set(action.isbn, Map([['title', action.title]]))
   },
   REMOVE_BOOK (state, action) {
-    return state.remove(action.title)
+    return state.delete(action.isbn)
   }
 })
 
-const customerReducer = createReducer({
+const customerReducer = createReducer(Set(), {
   ADD_CUSTOMER (state, action) {
     return state.add(action.customer)
   },
@@ -40,17 +40,18 @@ const assertStore = obj => {
   assert.deepStrictEqual(obj, mapValues(store.getState(), value => value.toJS()))
 }
 
-function addBook (title) {
+function addBook (title, isbn) {
   return {
     type: 'ADD_BOOK',
+    isbn,
     title
   }
 }
 
-function removeBook (title) {
+function removeBook (isbn) {
   return {
     type: 'REMOVE_BOOK',
-    title
+    isbn
   }
 }
 
@@ -68,17 +69,17 @@ function removeCustomer (customer) {
   }
 }
 
-store.dispatch(addBook('Война и мир, Voïna i mir'))
-assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
+store.dispatch(addBook('Война и мир, Voïna i mir', '978-2020476966'))
+assertStore({books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: []})
 
-store.dispatch(addBook('Война и мир, Voïna i mir'))
-assertStore({ books: ['Война и мир, Voïna i mir'], customers: [] })
+store.dispatch(addBook('Война и мир, Voïna i mir', '978-2020476966'))
+assertStore({books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: []})
 
-store.dispatch(removeBook('Война и мир, Voïna i mir'))
-assertStore({ books: [], customers: [] })
+store.dispatch(removeBook('978-2020476966'))
+assertStore({ books: {}, customers: [] })
 
 store.dispatch(addCustomer('Tintin'))
-assertStore({ books: [], customers: ['Tintin'] })
+assertStore({ books: {}, customers: ['Tintin'] })
 
 store.dispatch(removeCustomer('Tintin'))
-assertStore({ books: [], customers: [] })
+assertStore({ books: {}, customers: [] })
