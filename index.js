@@ -3,25 +3,33 @@ const { combineReducers, createStore } = require('redux')
 const { mapValues } = require('lodash')
 const { Set } = require('immutable')
 
-const bookReducer = (state = Set(), action) => {
-  if (action.type === 'ADD_BOOK') {
-    return state.add(action.title)
+function createReducer (handlers) {
+  return function reducer (state = Set(), action) {
+    if (handlers.hasOwnProperty(action.type)) {
+      return handlers[action.type](state, action)
+    } else {
+      return state
+    }
   }
-  if (action.type === 'REMOVE_BOOK') {
-    return state.delete(action.title)
-  }
-  return state
 }
 
-const customerReducer = (state = Set(), action) => {
-  if (action.type === 'ADD_CUSTOMER') {
-    return state.add(action.customer)
+const bookReducer = createReducer({
+  ADD_BOOK (state, action) {
+    return state.add(action.title)
+  },
+  REMOVE_BOOK (state, action) {
+    return state.remove(action.title)
   }
-  if (action.type === 'REMOVE_CUSTOMER') {
+})
+
+const customerReducer = createReducer({
+  ADD_CUSTOMER (state, action) {
+    return state.add(action.customer)
+  },
+  REMOVE_CUSTOMER (state, action) {
     return state.delete(action.customer)
   }
-  return state
-}
+})
 
 const store = createStore(combineReducers({
   books: bookReducer,
