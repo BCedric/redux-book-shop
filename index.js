@@ -1,7 +1,8 @@
 const assert = require('assert')
 const { combineReducers, createStore } = require('redux')
+const { createSelector } = require('reselect')
 const { Map, Set } = require('immutable')
-const { mapValues } = require('lodash')
+const { mapValues, memoize } = require('lodash')
 
 // ===================================================================
 
@@ -62,10 +63,20 @@ const customerReducer = combineActionHandlers(Set(), {
 
 // ===================================================================
 
+const getBooks = state => state.books
+
+const getBookByISBN = createSelector(
+  getBooks,
+  (_, isbn) => isbn,
+  (books, isbn) => books.get(isbn)
+)
+
 const store = createStore(combineReducers({
   books: bookReducer,
   customers: customerReducer
 }))
+
+// ===================================================================
 
 const assertStore = obj => {
   assert.deepStrictEqual(obj, mapValues(store.getState(), value => value.toJS()))
@@ -74,9 +85,12 @@ const assertStore = obj => {
 store.dispatch(addBook('978-2020476966', 'Война и мир, Voïna i mir'))
 assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: [] })
 
-store.dispatch(addBook('978-2020476966', 'Война и мир, Voïna i mir'))
-assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: [] })
+store.dispatch(addBook('978-2020476967', 'azert'))
+assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' }, '978-2020476967': { title: 'azert' } }, customers: [] })
 
+assert.deepStrictEqual({ title: 'azert' }, getBookByISBN(store.getState(), '978-2020476967').toJS())
+
+store.dispatch(removeBook('978-2020476967'))
 store.dispatch(removeBook('978-2020476966'))
 assertStore({ books: {}, customers: [] })
 
