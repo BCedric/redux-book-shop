@@ -2,7 +2,7 @@ const assert = require('assert')
 const { combineReducers, createStore } = require('redux')
 const { createSelector } = require('reselect')
 const { Map, Set } = require('immutable')
-const { mapValues, memoize } = require('lodash')
+const { mapValues } = require('lodash')
 
 // ===================================================================
 
@@ -44,6 +44,14 @@ const bookReducer = combineActionHandlers(Map(), {
   [removeBook]: (state, { isbn }) => state.delete(isbn)
 })
 
+const getBooks = state => state.books
+
+const getBookByISBN = createSelector(
+  getBooks,
+  (_, isbn) => isbn,
+  (books, isbn) => books.get(isbn)
+)
+
 // -------------------------------------------------------------------
 
 const addCustomer = createActionCreator(
@@ -60,16 +68,6 @@ const customerReducer = combineActionHandlers(Set(), {
   [addCustomer]: (state, { customer }) => state.add(customer),
   [removeCustomer]: (state, { customer }) => state.delete(customer)
 })
-
-// ===================================================================
-
-const getBooks = state => state.books
-
-const getBookByISBN = createSelector(
-  getBooks,
-  (_, isbn) => isbn,
-  (books, isbn) => books.get(isbn)
-)
 
 const store = createStore(combineReducers({
   books: bookReducer,
