@@ -4,9 +4,7 @@ const { createSelector } = require('reselect')
 const fs = require('fs')
 const { Map, Set } = require('immutable')
 const { mapValues } = require('lodash')
-const thunkMiddleware = require('redux-thunk')
-const createLogger = require('redux-logger')
-// const fetch = require('isomorphic-fetch')
+const thunkMiddleware = require('redux-thunk').default
 
 // ===================================================================
 
@@ -83,28 +81,23 @@ const logout = createActionCreator(
     user => ({ user })
 )
 
-const authReducer = combineActionHandlers('', {
-  [receiveLogin]: (state, action) => action.users.find(u => u.login === action.user && u.password === action.password) !== undefined ? action.user : '',
+const authReducer = combineActionHandlers(null, {
+  [receiveLogin]: (state, action) => action.users.find(u => u.login === action.user && u.password === action.password) !== undefined ? action.user : null,
   [logout]: (state, action) => null
 })
 
 function logUser (user, password) {
-  return function (dispatch) {
-    return fs.readFile('./users.json', 'utf8', function (err, data) {
-      if (err) {
-        console.log(err)
-        throw err
+  return dispatch => {
+    fs.readFile('./users.json', 'utf8', function (error, users) {
+      if (error) {
+        console.error(error)
+        return
       }
-      return data
+      users = JSON.parse(users)
+      return dispatch(receiveLogin(user, password, users))
     })
-      .then(response => response.json())
-      .then(users =>
-        dispatch(receiveLogin(user, password, users))
-      )
   }
 }
-
-const loggerMiddleware = createLogger()
 
 const store = createStore(
   combineReducers(
@@ -112,11 +105,10 @@ const store = createStore(
       books: bookReducer,
       customers: customerReducer,
       auth: authReducer
-    },
-    applyMiddleware(
-      thunkMiddleware, // lets us dispatch() functions
-      loggerMiddleware // neat middleware that logs actions
-    )
+    }
+  ),
+  applyMiddleware(
+    thunkMiddleware
   )
 )
 
@@ -126,23 +118,44 @@ const assertStore = obj => {
   assert.deepStrictEqual(obj, mapValues(store.getState(), value => value instanceof Map || value instanceof Set ? value.toJS() : value))
 }
 
+const waitState = predicate => new Promise(resolve => {
+  const unsubscribe = store.subscribe(() => {
+    const state = store.getState()
+    if (predicate(state)) {
+      unsubscribe()
+      resolve(state)
+    }
+  })
+})
+
 store.dispatch(logUser('Francis', 'coucou'))
-// store.dispatch(logout())
+waitState(state => state.auth).then(state => {
+  assertStore({ books: {}, customers: [], auth: 'Francis' })
+  store.dispatch(logUser('Francis', 'coucous'))
+  return waitState(state => !state.auth)
+}).then(state => {
+  assertStore({ books: {}, customers: [], auth: null })
+  console.log('ok')
+}).catch(error => {
+  console.error(error)
+})
+
+store.dispatch(logout())
 
 store.dispatch(addBook('978-2020476966', 'Война и мир, Voïna i mir'))
-assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: [], auth: '' })
+assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: [], auth: null })
 
 store.dispatch(addBook('978-2020476967', 'azert'))
-assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' }, '978-2020476967': { title: 'azert' } }, customers: [], auth: '' })
+assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' }, '978-2020476967': { title: 'azert' } }, customers: [], auth: null })
 
 assert.deepStrictEqual({ title: 'azert' }, getBookByISBN(store.getState(), '978-2020476967').toJS())
 
 store.dispatch(removeBook('978-2020476967'))
 store.dispatch(removeBook('978-2020476966'))
-assertStore({ books: {}, customers: [], auth: '' })
+assertStore({ books: {}, customers: [], auth: null })
 
 store.dispatch(addCustomer('Tintin'))
-assertStore({ books: {}, customers: [ 'Tintin' ], auth: '' })
+assertStore({ books: {}, customers: [ 'Tintin' ], auth: null })
 
 store.dispatch(removeCustomer('Tintin'))
-assertStore({ books: {}, customers: [], auth: '' })
+assertStore({ books: {}, customers: [], auth: null })
