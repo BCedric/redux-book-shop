@@ -21,7 +21,7 @@ function createActionCreator (type, payloadCreator) {
   function actionCreator (...args) {
     return {
       type,
-      payload: payloadCreator(...args)
+      payload: payloadCreator ? payloadCreator(...args) : null
     }
   }
   actionCreator.toString = () => type
@@ -73,16 +73,15 @@ const customerReducer = combineActionHandlers(Set(), {
 
 const receiveLogin = createActionCreator(
     'RECEIVE_LOGIN',
-    (user, password, users) => ({user, password, users})
+    (user) => ({ user })
 )
 
 const logout = createActionCreator(
-    'LOGOUT',
-    () => {}
+    'LOGOUT'
 )
 
 const authReducer = combineActionHandlers(null, {
-  [receiveLogin]: (state, {user, password, users}) => users.find(u => u.login === user && u.password === password) !== undefined ? user : null,
+  [receiveLogin]: (_, { user }) => user,
   [logout]: () => null
 })
 
@@ -94,7 +93,11 @@ const logUser = (user, password) =>
         return
       }
       users = JSON.parse(users)
-      return dispatch(receiveLogin(user, password, users))
+
+      const auth = users.find(u => u.login === user && u.password === password)
+      if (auth !== undefined) {
+        return dispatch(receiveLogin(user))
+      }
     })
   }
 
