@@ -71,8 +71,8 @@ const customerReducer = combineActionHandlers(Set(), {
   [removeCustomer]: (state, { customer }) => state.delete(customer)
 })
 
-const receiveLogin = createActionCreator(
-    'RECEIVE_LOGIN',
+const login = createActionCreator(
+    'LOGIN',
     (user) => ({ user })
 )
 
@@ -81,7 +81,7 @@ const logout = createActionCreator(
 )
 
 const authReducer = combineActionHandlers(null, {
-  [receiveLogin]: (_, { user }) => user,
+  [login]: (_, { user }) => user,
   [logout]: () => null
 })
 
@@ -96,7 +96,7 @@ const logUser = (user, password) =>
 
       const auth = users.find(u => u.login === user && u.password === password)
       if (auth !== undefined) {
-        return dispatch(receiveLogin(user))
+        return dispatch(login(user))
       }
     })
   }
