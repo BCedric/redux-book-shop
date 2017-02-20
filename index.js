@@ -1,10 +1,10 @@
 const assert = require('assert')
+const fs = require('fs')
+const thunkMiddleware = require('redux-thunk').default
 const { applyMiddleware, combineReducers, createStore } = require('redux')
 const { createSelector } = require('reselect')
-const fs = require('fs')
 const { Map, Set } = require('immutable')
 const { mapValues } = require('lodash')
-const thunkMiddleware = require('redux-thunk').default
 
 // ===================================================================
 
@@ -78,16 +78,16 @@ const receiveLogin = createActionCreator(
 
 const logout = createActionCreator(
     'LOGOUT',
-    user => ({ user })
+    () => {}
 )
 
 const authReducer = combineActionHandlers(null, {
-  [receiveLogin]: (state, action) => action.users.find(u => u.login === action.user && u.password === action.password) !== undefined ? action.user : null,
-  [logout]: (state, action) => null
+  [receiveLogin]: (state, {user, password, users}) => users.find(u => u.login === user && u.password === password) !== undefined ? user : null,
+  [logout]: () => null
 })
 
-function logUser (user, password) {
-  return dispatch => {
+const logUser = (user, password) =>
+  dispatch => {
     fs.readFile('./users.json', 'utf8', function (error, users) {
       if (error) {
         console.error(error)
@@ -97,7 +97,6 @@ function logUser (user, password) {
       return dispatch(receiveLogin(user, password, users))
     })
   }
-}
 
 const store = createStore(
   combineReducers(
@@ -115,7 +114,7 @@ const store = createStore(
 // ===================================================================
 
 const assertStore = obj => {
-  assert.deepStrictEqual(obj, mapValues(store.getState(), value => value instanceof Map || value instanceof Set ? value.toJS() : value))
+  assert.deepStrictEqual(obj, mapValues(store.getState(), value => value && typeof value.toJS === 'function' ? value.toJS() : value))
 }
 
 const waitState = predicate => new Promise(resolve => {
