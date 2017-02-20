@@ -1,5 +1,7 @@
 const assert = require('assert')
-const { combineReducers, createStore } = require('redux')
+const fs = require('fs')
+const thunkMiddleware = require('redux-thunk').default
+const { applyMiddleware, combineReducers, createStore } = require('redux')
 const { createSelector } = require('reselect')
 const { Map, Set } = require('immutable')
 const { mapValues } = require('lodash')
@@ -19,7 +21,7 @@ function createActionCreator (type, payloadCreator) {
   function actionCreator (...args) {
     return {
       type,
-      payload: payloadCreator(...args)
+      payload: payloadCreator ? payloadCreator(...args) : null
     }
   }
   actionCreator.toString = () => type
@@ -69,31 +71,93 @@ const customerReducer = combineActionHandlers(Set(), {
   [removeCustomer]: (state, { customer }) => state.delete(customer)
 })
 
-const store = createStore(combineReducers({
-  books: bookReducer,
-  customers: customerReducer
-}))
+const login = createActionCreator(
+    'LOGIN',
+    (user) => ({ user })
+)
+
+const logout = createActionCreator(
+    'LOGOUT'
+)
+
+const authReducer = combineActionHandlers(null, {
+  [login]: (_, { user }) => user,
+  [logout]: () => null
+})
+
+const logUser = (user, password) =>
+  dispatch => {
+    fs.readFile('./users.json', 'utf8', function (error, users) {
+      if (error) {
+        console.error(error)
+        return
+      }
+      users = JSON.parse(users)
+
+      const auth = users.find(u => u.login === user && u.password === password)
+      if (auth !== undefined) {
+        return dispatch(login(user))
+      }
+    })
+  }
+
+const store = createStore(
+  combineReducers(
+    {
+      books: bookReducer,
+      customers: customerReducer,
+      auth: authReducer
+    }
+  ),
+  applyMiddleware(
+    thunkMiddleware
+  )
+)
 
 // ===================================================================
 
 const assertStore = obj => {
-  assert.deepStrictEqual(obj, mapValues(store.getState(), value => value.toJS()))
+  assert.deepStrictEqual(obj, mapValues(store.getState(), value => value && typeof value.toJS === 'function' ? value.toJS() : value))
 }
 
+const waitState = predicate => new Promise(resolve => {
+  const unsubscribe = store.subscribe(() => {
+    const state = store.getState()
+    if (predicate(state)) {
+      unsubscribe()
+      resolve(state)
+    }
+  })
+})
+
+store.dispatch(logUser('Francis', 'coucou'))
+waitState(state => state.auth).then(state => {
+  assertStore({ books: {}, customers: [], auth: 'Francis' })
+  store.dispatch(logUser('Francis', 'coucous'))
+  return waitState(state => !state.auth)
+}).then(state => {
+  assertStore({ books: {}, customers: [], auth: null })
+  console.log('ok')
+}).catch(error => {
+  console.error(error)
+})
+
+store.dispatch(logout())
+
 store.dispatch(addBook('978-2020476966', 'Война и мир, Voïna i mir'))
-assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: [] })
+assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' } }, customers: [], auth: null })
 
 store.dispatch(addBook('978-2020476967', 'azert'))
-assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' }, '978-2020476967': { title: 'azert' } }, customers: [] })
+assertStore({ books: { '978-2020476966': { title: 'Война и мир, Voïna i mir' }, '978-2020476967': { title: 'azert' } }, customers: [], auth: null })
 
 assert.deepStrictEqual({ title: 'azert' }, getBookByISBN(store.getState(), '978-2020476967').toJS())
 
 store.dispatch(removeBook('978-2020476967'))
 store.dispatch(removeBook('978-2020476966'))
-assertStore({ books: {}, customers: [] })
+assertStore({ books: {}, customers: [], auth: null })
 
 store.dispatch(addCustomer('Tintin'))
-assertStore({ books: {}, customers: [ 'Tintin' ] })
+assertStore({ books: {}, customers: [ 'Tintin' ], auth: null })
 
 store.dispatch(removeCustomer('Tintin'))
-assertStore({ books: {}, customers: [] })
+assertStore({ books: {}, customers: [], auth: null })
